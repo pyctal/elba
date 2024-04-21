@@ -1,0 +1,6 @@
+services:
+  data_service:
+    build: data_service
+    entrypoint: cargo watch -x run
+    volumes:
+      - ./data_service:/data_service
