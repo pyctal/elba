@@ -17,10 +17,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build data_service
+      working-directory: data_service
       run: cargo build --verbose
-      working-directory: data_service
     - name: Test data_service
-      run: cargo test --verbose
       working-directory: data_service
+      run: cargo test --verbose
     - name: Check formatting
+      working-directory: data_service
       run: cargo fmt --all -- --check
