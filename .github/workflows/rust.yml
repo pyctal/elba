@@ -16,7 +16,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build
+    - name: Build data_service
       run: cargo build --verbose
-    - name: Run tests
+      working-directory: data_service
+    - name: Test data_service
       run: cargo test --verbose
+      working-directory: data_service
