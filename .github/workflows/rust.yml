@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  rust_checks:
 
     runs-on: ubuntu-latest
 
@@ -22,3 +22,5 @@ jobs:
     - name: Test data_service
       run: cargo test --verbose
       working-directory: data_service
+    - name: Check formatting
+      run: cargo fmt --all -- --check
