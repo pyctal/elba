@@ -5,6 +5,12 @@ struct MatchProcessor {
 }
 
 impl MatchProcessor {
+    pub async fn new(api_key: String) -> Self {
+        Self {
+            riot_api: RiotApi::new(api_key),
+        }
+    }
+
     pub async fn get_match(
         &self,
         match_id: &str,
