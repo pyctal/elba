@@ -4,3 +4,11 @@ services:
     entrypoint: cargo watch -x run
     volumes:
       - ./data_service:/data_service
+  database:
+    build: database
+    env_file:
+      - env.txt
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
