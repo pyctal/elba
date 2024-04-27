@@ -1,8 +1,11 @@
-FROM rust:1.77-alpine
+FROM rust:1.77
 
 WORKDIR /data_service
 COPY . . 
-RUN apk add musl-dev pkgconfig libressl-dev
+RUN apt-get upgrade
+RUN apt-get install openssl libpq-dev gcc
+RUN cargo install diesel_cli --no-default-features --features postgres
+RUN diesel migration generate --diff-schema create_posts
 RUN cargo install cargo-watch
 
 # TAG elba/dev:1

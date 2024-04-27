@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 riven = "2.43.0"
 tokio = { version = "1.37.0", features = ["full"] }
+diesel = { version = "2.1.6", features = ["postgres"] }
