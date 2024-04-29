@@ -9,3 +9,5 @@ edition = "2021"
 riven = "2.43.0"
 tokio = { version = "1.37.0", features = ["full"] }
 diesel = { version = "2.1.6", features = ["postgres"] }
+serde = "1.0.199"
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
