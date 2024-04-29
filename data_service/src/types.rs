@@ -1,4 +1,4 @@
 pub struct PuuidToChampionMapping {
-    puuid: String,
-    champion_name: String,
+    pub puuid: String,
+    pub champion_name: String,
 }

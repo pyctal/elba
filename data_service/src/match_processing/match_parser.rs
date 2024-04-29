@@ -4,7 +4,22 @@ use crate::types::PuuidToChampionMapping;
 
 pub async fn parse_match(match_data: Match) -> Vec<PuuidToChampionMapping> {
     // Get match data.
-    vec![]
+
+    let to_return : Vec<PuuidToChampionMapping> = match_data
+    .info
+    .participants.iter().map(|participant| {
+        PuuidToChampionMapping {
+            puuid: participant.puuid.clone(),
+            champion_name: participant.champion_name.clone(),
+        }
+    }).collect();
+    
+    // println!("Printing mappings");
+    // for mapping in &to_return {
+    //     println!("puuid: {}, champion_name: {}", mapping.puuid, mapping.champion_name);
+    // }
+
+    to_return
 }
 
 #[cfg(test)]
