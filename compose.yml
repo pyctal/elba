@@ -7,21 +7,21 @@ services:
     command: sh -c "
       diesel setup &&
       diesel migration generate --diff-schema create_match_data &&
-      diesel migration run &&
+      diesel migration run;
       cargo watch -x run"
     volumes:
       - ./data_service:/data_service
     env_file:
-      - env.txt
+      - .env
   database:
     build: database
+    env_file:
+      - .env
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: pg_isready -U $POSTGRES_USER
       interval: 5s
       timeout: 5s
       retries: 5
-    env_file:
-      - env.txt
   adminer:
     image: adminer
     ports:
