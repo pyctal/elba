@@ -1,6 +1,8 @@
+// @generated automatically by Diesel CLI.
+
 diesel::table! {
     match_data (id) {
-        id -> VarChar,
+        id -> Varchar,
         start_time -> Timestamp,
         processed -> Bool,
     }
