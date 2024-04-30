@@ -1,6 +1,6 @@
 use riven::{consts::RegionalRoute, models::match_v5::MatchTimeline, RiotApi};
 
-struct MatchProcessor {
+pub struct MatchProcessor {
     riot_api: RiotApi,
 }
 
