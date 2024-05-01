@@ -6,7 +6,7 @@ pub async fn parse_match_timeline(_match_timeline: MatchTimeline) -> crate::type
     // Parse match timeline here.
     let match_frames = _match_timeline.info.frames;
 
-    println!("Start Time: {:?}", start_time);
+    // println!("Start Time: {:?}", start_time);
 
     // for ( index, frame) in match_frames.iter().enumerate() {
     //     let frame_events = &frame.events;
