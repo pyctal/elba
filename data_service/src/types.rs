@@ -17,7 +17,7 @@ pub struct ChampionFrame {
 
 #[derive(PartialEq)]
 pub struct MatchTimelineFrame {
-    pub mapping: Vec<ChampionFrame>,
+    pub mappings: Vec<ChampionFrame>,
     /**
      * Offset of game start time
      */
