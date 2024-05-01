@@ -19,20 +19,22 @@ pub async fn parse_match_timeline(_match_timeline: MatchTimeline) -> crate::type
     //     }
     // }MatchTimelineFrame
 
-    let frames_after_convesion = _match_timeline.info.frames
-        .iter()
-        .map(|frame| MatchTimelineFrame {
-            frame_time: TimeDelta::milliseconds(frame.timestamp as i64),
-            // mapping:
-            // current_gold: frame.
-        })
-        .collect();
+    // let frames_after_convesion = _match_timeline.info.frames
+    //     .iter()
+    //     .map(|frame| MatchTimelineFrame {
+    //         frame_time: TimeDelta::milliseconds(frame.timestamp as i64),
+    //         // mapping:
+    //         // current_gold: frame.
+    //     })
+    //     .collect();
 
     crate::types::MatchTimeline {
-        frames: frames_after_convesion,
-        // match_id: _match_timeline.metadata.match_id.clone(),
-        match_id: String::from(""),
-        start_time: DateTime::from_timestamp_millis(match_frames[0].events[0].real_timestamp.unwrap())
+        frames: vec![],
+        match_id: _match_timeline.metadata.match_id.clone(),
+        // match_id: String::from(""),
+        start_time: DateTime::from_timestamp_millis(
+            match_frames[0].events[0].real_timestamp.unwrap(),
+        )
         .expect("invalid timestamp")
         .naive_utc(),
     }
