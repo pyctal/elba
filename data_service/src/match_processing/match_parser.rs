@@ -153,4 +153,25 @@ mod tests {
         // Assert.
         assert_eq!(response.match_id, "EUW1_6920643858");
     }
+
+    #[tokio::test]
+    async fn test_match_timeline_frame_metadata() {
+        // Arrange.
+        let test_match_1: MatchTimeline = serde_json::from_str(
+            fs::read_to_string("src/match_processing/test_data/test_match_timeline_1.txt")
+                .unwrap()
+                .as_str(),
+        )
+        .unwrap();
+
+        // Act.
+        let response: crate::types::MatchTimeline = parse_match_timeline(test_match_1).await;
+
+        // Assert.
+        let frames = response.frames;
+        assert!(frames.len() == 42);
+        for frame in frames {
+            assert!(frame.mappings.len() == 10);
+        }
+    }
 }
