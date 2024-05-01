@@ -1,14 +1,42 @@
-use chrono::Utc;
+use crate::types::{MatchTimelineFrame, PuuidToChampionMapping};
+use chrono::{DateTime, TimeDelta};
 use riven::models::match_v5::{Match, MatchTimeline};
-
-use crate::types::PuuidToChampionMapping;
 
 pub async fn parse_match_timeline(_match_timeline: MatchTimeline) -> crate::types::MatchTimeline {
     // Parse match timeline here.
+    let match_frames = _match_timeline.info.frames;
+
+    // println!("Start Time: {:?}", start_time);
+
+    // for ( index, frame) in match_frames.iter().enumerate() {
+    //     let frame_events = &frame.events;
+
+    //     println!("Frame: {}, No. of Events: {}", index, frame_events.len());
+    //     println!( "Real Match Timestamp Frame {}: {:?}", index, frame.events[0].real_timestamp);
+
+    //     if index == 5 {
+    //         break;
+    //     }
+    // }MatchTimelineFrame
+
+    // let frames_after_convesion = _match_timeline.info.frames
+    //     .iter()
+    //     .map(|frame| MatchTimelineFrame {
+    //         frame_time: TimeDelta::milliseconds(frame.timestamp as i64),
+    //         // mapping:
+    //         // current_gold: frame.
+    //     })
+    //     .collect();
+
     crate::types::MatchTimeline {
         frames: vec![],
-        match_id: String::from(""),
-        start_time: Utc::now().naive_utc(),
+        match_id: _match_timeline.metadata.match_id.clone(),
+        // match_id: String::from(""),
+        start_time: DateTime::from_timestamp_millis(
+            match_frames[0].events[0].real_timestamp.unwrap(),
+        )
+        .expect("invalid timestamp")
+        .naive_utc(),
     }
 }
 
