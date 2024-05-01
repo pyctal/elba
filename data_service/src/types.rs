@@ -8,13 +8,20 @@ pub struct PuuidToChampionMapping {
 }
 
 #[derive(PartialEq)]
+pub struct ChampionFrame {
+    pub champion_name: String,
+    pub opposing_champion_name: String,
+    pub position: String,
+    pub gold: String,
+}
+
+#[derive(PartialEq)]
 pub struct MatchTimelineFrame {
-    pub mapping: PuuidToChampionMapping,
+    pub mapping: Vec<ChampionFrame>,
     /**
      * Offset of game start time
      */
     pub frame_time: TimeDelta,
-    pub current_gold: i32,
 }
 
 #[derive(PartialEq)]
