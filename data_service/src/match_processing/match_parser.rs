@@ -1,35 +1,89 @@
-use crate::types::{MatchTimelineFrame, PuuidToChampionMapping};
+use crate::types::{ChampionFrame, MatchTimelineFrame, PuuidToChampionMapping};
 use chrono::{DateTime, TimeDelta};
-use riven::models::match_v5::{Match, MatchTimeline};
+use riven::models::match_v5::{
+    Match, MatchTimeline, MatchTimelineInfoFrameParticipantFrame, Participant,
+};
+use std::collections::HashMap;
 
-pub async fn parse_match_timeline(_match_timeline: MatchTimeline) -> crate::types::MatchTimeline {
+pub async fn parse_match_timeline(
+    _match_timeline: MatchTimeline,
+    _match: Match,
+) -> crate::types::MatchTimeline {
     // Parse match timeline here.
     let match_frames = _match_timeline.info.frames;
 
-    // println!("Start Time: {:?}", start_time);
+    let participant_id_object_map: HashMap<i32, Participant> = _match
+        .info
+        .participants
+        .iter()
+        .map(|p| (p.participant_id, p.clone()))
+        .collect();
 
-    // for ( index, frame) in match_frames.iter().enumerate() {
-    //     let frame_events = &frame.events;
+    let participant_id_opponent_id_map: HashMap<i32, i32> = _match
+        .info
+        .participants
+        .iter()
+        .map(|p| {
+            (
+                p.participant_id,
+                get_opponent_player_id(p.participant_id, _match.clone()),
+            )
+        })
+        .collect();
 
-    //     println!("Frame: {}, No. of Events: {}", index, frame_events.len());
-    //     println!( "Real Match Timestamp Frame {}: {:?}", index, frame.events[0].real_timestamp);
+    let mapped_frames = match_frames
+        .iter()
+        .map(|frame| {
+            let participants_frame_as_hashmap: HashMap<
+                String,
+                MatchTimelineInfoFrameParticipantFrame,
+            > = serde_json::from_value(
+                serde_json::to_value(frame.participant_frames.clone()).unwrap(),
+            )
+            .unwrap();
 
-    //     if index == 5 {
-    //         break;
-    //     }
-    // }MatchTimelineFrame
+            let champion_mappings: Vec<ChampionFrame> = participants_frame_as_hashmap
+                .iter()
+                .map(|(player_id, player)| {
+                    let current_player = participant_id_object_map
+                        .get(&player_id.parse::<i32>().unwrap())
+                        .unwrap();
+                    let opposing_player = participant_id_object_map
+                        .get(
+                            &participant_id_opponent_id_map
+                                .get(&player_id.parse::<i32>().unwrap())
+                                .unwrap(),
+                        )
+                        .unwrap();
 
-    // let frames_after_convesion = _match_timeline.info.frames
-    //     .iter()
-    //     .map(|frame| MatchTimelineFrame {
-    //         frame_time: TimeDelta::milliseconds(frame.timestamp as i64),
-    //         // mapping:
-    //         // current_gold: frame.
-    //     })
-    //     .collect();
+                    ChampionFrame {
+                        champion_name: current_player.champion_name.clone(),
+                        opposing_champion_name: opposing_player.champion_name.clone(),
+                        position: calculate_position(current_player.individual_position.as_str()),
+                        gold: player.current_gold.to_string(),
+                    }
+                })
+                .collect();
+
+            for champion in &champion_mappings {
+                println!(
+                    "Champ: {} vs: {} - Position: {} Gold {}",
+                    champion.champion_name,
+                    champion.opposing_champion_name,
+                    champion.position,
+                    champion.gold,
+                );
+            }
+
+            MatchTimelineFrame {
+                mappings: champion_mappings,
+                frame_time: TimeDelta::seconds(frame.timestamp as i64),
+            }
+        })
+        .collect();
 
     crate::types::MatchTimeline {
-        frames: vec![],
+        frames: mapped_frames,
         match_id: _match_timeline.metadata.match_id.clone(),
         // match_id: String::from(""),
         start_time: DateTime::from_timestamp_millis(
@@ -51,6 +105,29 @@ pub async fn get_puuid_to_champion_mapping(match_data: Match) -> Vec<PuuidToCham
             position: calculate_position(participant.individual_position.as_str()),
         })
         .collect()
+}
+
+fn get_opponent_player_id(current_player_id: i32, match_data: Match) -> i32 {
+    let current_player_position = calculate_position(
+        &match_data
+            .info
+            .participants
+            .iter()
+            .find(|p| p.participant_id == current_player_id)
+            .unwrap()
+            .individual_position,
+    );
+
+    match_data
+        .info
+        .participants
+        .iter()
+        .find(|p| {
+            p.participant_id != current_player_id
+                && calculate_position(p.individual_position.as_str()) == current_player_position
+        })
+        .unwrap()
+        .participant_id
 }
 
 fn calculate_position(individual_position: &str) -> String {
@@ -140,7 +217,14 @@ mod tests {
     #[tokio::test]
     async fn test_match_timeline_can_parse_match_id() {
         // Arrange.
-        let test_match_1: MatchTimeline = serde_json::from_str(
+        let test_match_1: Match = serde_json::from_str(
+            fs::read_to_string("src/match_processing/test_data/test_match_1.txt")
+                .unwrap()
+                .as_str(),
+        )
+        .unwrap();
+
+        let test_match_timeline_1: MatchTimeline = serde_json::from_str(
             fs::read_to_string("src/match_processing/test_data/test_match_timeline_1.txt")
                 .unwrap()
                 .as_str(),
@@ -148,7 +232,8 @@ mod tests {
         .unwrap();
 
         // Act.
-        let response: crate::types::MatchTimeline = parse_match_timeline(test_match_1).await;
+        let response: crate::types::MatchTimeline =
+            parse_match_timeline(test_match_timeline_1, test_match_1).await;
 
         // Assert.
         assert_eq!(response.match_id, "EUW1_6920643858");
@@ -157,15 +242,22 @@ mod tests {
     #[tokio::test]
     async fn test_match_timeline_frame_metadata() {
         // Arrange.
-        let test_match_1: MatchTimeline = serde_json::from_str(
-            fs::read_to_string("src/match_processing/test_data/test_match_timeline_1.txt")
+        let test_match_1: Match = serde_json::from_str(
+            fs::read_to_string("src/match_processing/test_data/test_match_1.txt")
                 .unwrap()
                 .as_str(),
         )
         .unwrap();
 
+        let test_match_timeline_1: MatchTimeline = serde_json::from_str(
+            fs::read_to_string("src/match_processing/test_data/test_match_timeline_1.txt")
+                .unwrap()
+                .as_str(),
+        )
+        .unwrap();
         // Act.
-        let response: crate::types::MatchTimeline = parse_match_timeline(test_match_1).await;
+        let response: crate::types::MatchTimeline =
+            parse_match_timeline(test_match_timeline_1, test_match_1).await;
 
         // Assert.
         let frames = response.frames;
@@ -178,7 +270,14 @@ mod tests {
     #[tokio::test]
     async fn test_match_timeline_first_frame_data() {
         // Arrange.
-        let test_match_1: MatchTimeline = serde_json::from_str(
+        let test_match_1: Match = serde_json::from_str(
+            fs::read_to_string("src/match_processing/test_data/test_match_1.txt")
+                .unwrap()
+                .as_str(),
+        )
+        .unwrap();
+
+        let test_match_timeline_1: MatchTimeline = serde_json::from_str(
             fs::read_to_string("src/match_processing/test_data/test_match_timeline_1.txt")
                 .unwrap()
                 .as_str(),
@@ -186,7 +285,8 @@ mod tests {
         .unwrap();
 
         // Act.
-        let response: crate::types::MatchTimeline = parse_match_timeline(test_match_1).await;
+        let response: crate::types::MatchTimeline =
+            parse_match_timeline(test_match_timeline_1, test_match_1).await;
 
         // Assert.
         let frames = response.frames;
