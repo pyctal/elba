@@ -71,16 +71,6 @@ pub async fn parse_match_timeline(
                 })
                 .collect();
 
-            for mapping in &champion_mappings {
-                println!(
-                    "Champ: {} vs {}  Lane: {} Gold: {}",
-                    mapping.champion_name,
-                    mapping.opposing_champion_name,
-                    mapping.position,
-                    mapping.gold
-                );
-            }
-
             MatchTimelineFrame {
                 mappings: champion_mappings,
                 frame_time: TimeDelta::seconds(frame.timestamp as i64),
@@ -289,17 +279,6 @@ mod tests {
         )
         .unwrap();
 
-        // Act.
-        let response: crate::types::MatchTimeline =
-            parse_match_timeline(test_match_timeline_1, test_match_1).await;
-
-        // Assert.
-        let frames = response.frames;
-        assert!(frames.len() == 42);
-        for mapping in &frames[0].mappings {
-            assert_eq!(mapping.gold.parse::<i32>().unwrap(), 500);
-        }
-
         let champ_opponent_truth_map = std::collections::HashMap::from([
             ("Malzahar".to_string(), "Aatrox".to_string()),
             ("TahmKench".to_string(), "Brand".to_string()),
@@ -324,6 +303,18 @@ mod tests {
             ("TahmKench".to_string(), "SUPPORT"),
             ("Vi".to_string(), "JUNGLE"),
         ]);
+
+        // Act.
+        let response: crate::types::MatchTimeline =
+            parse_match_timeline(test_match_timeline_1, test_match_1).await;
+
+        // Assert.
+        let frames = response.frames;
+        assert!(frames.len() == 42);
+        for mapping in &frames[0].mappings {
+            assert_eq!(mapping.gold.parse::<i32>().unwrap(), 500);
+        }
+
         // Champ vs Opponent Champ Mapping check frame 0
         for mapping in &frames[0].mappings {
             assert_eq!(
