@@ -9,9 +9,9 @@ pub async fn parse_match_timeline(
     _match_timeline: MatchTimeline,
     _match: Match,
 ) -> crate::types::MatchTimeline {
-    // Parse match timeline here.
     let match_frames = _match_timeline.info.frames;
 
+    // Map of Participant ID to Participant object ( Found in Match Object but missing in MatchTimeline Object)
     let participant_id_object_map: HashMap<i32, Participant> = _match
         .info
         .participants
@@ -19,6 +19,7 @@ pub async fn parse_match_timeline(
         .map(|p| (p.participant_id, p.clone()))
         .collect();
 
+    // Participant ID to Opponent Participant ID Map
     let participant_id_opponent_id_map: HashMap<i32, i32> = _match
         .info
         .participants
@@ -31,9 +32,11 @@ pub async fn parse_match_timeline(
         })
         .collect();
 
+    // Using Combined context ( MatchTimeline, Match Objects ) create a new MatchTimeline Object
     let mapped_frames = match_frames
         .iter()
         .map(|frame| {
+            // Weird that participant_frames is a struct of ( x1, x2,...x10) instead of a vector ( something iteratable) so we convert it to a hashmap ( only so that we can use .map())
             let participants_frame_as_hashmap: HashMap<
                 String,
                 MatchTimelineInfoFrameParticipantFrame,
@@ -42,9 +45,11 @@ pub async fn parse_match_timeline(
             )
             .unwrap();
 
+            // Mapping Participant Frames to Champion Frames
             let champion_mappings: Vec<ChampionFrame> = participants_frame_as_hashmap
                 .iter()
                 .map(|(player_id, player)| {
+                    // Current Player and Opposing Player
                     let current_player = participant_id_object_map
                         .get(&player_id.parse::<i32>().unwrap())
                         .unwrap();
@@ -56,6 +61,7 @@ pub async fn parse_match_timeline(
                         )
                         .unwrap();
 
+                    // Finally creating the Champion Frame required by the API
                     ChampionFrame {
                         champion_name: current_player.champion_name.clone(),
                         opposing_champion_name: opposing_player.champion_name.clone(),
@@ -64,17 +70,8 @@ pub async fn parse_match_timeline(
                     }
                 })
                 .collect();
-
-            for champion in &champion_mappings {
-                println!(
-                    "Champ: {} vs: {} - Position: {} Gold {}",
-                    champion.champion_name,
-                    champion.opposing_champion_name,
-                    champion.position,
-                    champion.gold,
-                );
-            }
-
+            
+            
             MatchTimelineFrame {
                 mappings: champion_mappings,
                 frame_time: TimeDelta::seconds(frame.timestamp as i64),
@@ -85,7 +82,6 @@ pub async fn parse_match_timeline(
     crate::types::MatchTimeline {
         frames: mapped_frames,
         match_id: _match_timeline.metadata.match_id.clone(),
-        // match_id: String::from(""),
         start_time: DateTime::from_timestamp_millis(
             match_frames[0].events[0].real_timestamp.unwrap(),
         )
