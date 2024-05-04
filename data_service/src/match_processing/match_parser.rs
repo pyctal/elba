@@ -70,9 +70,15 @@ pub async fn parse_match_timeline(
                     }
                 })
                 .collect();
-            
+
             for mapping in &champion_mappings {
-                println!("Champ: {} vs {}  Lane: {} Gold: {}",mapping.champion_name,mapping.opposing_champion_name,mapping.position,mapping.gold);
+                println!(
+                    "Champ: {} vs {}  Lane: {} Gold: {}",
+                    mapping.champion_name,
+                    mapping.opposing_champion_name,
+                    mapping.position,
+                    mapping.gold
+                );
             }
 
             MatchTimelineFrame {
@@ -295,40 +301,45 @@ mod tests {
         }
 
         let champ_opponent_truth_map = std::collections::HashMap::from([
-            ("Malzahar".to_string(),   "Aatrox".to_string()),
-            ("TahmKench".to_string(),   "Brand".to_string()),
-            ("Brand".to_string(),   "TahmKench".to_string()),
-            ("Viego".to_string(),   "Vi".to_string()),
-            ("Zed".to_string(),   "TwistedFate".to_string()),
-            ("Vi".to_string(),   "Viego".to_string()),
-            ("TwistedFate".to_string(),   "Zed".to_string()),
-            ("Samira".to_string(),   "Lucian".to_string()),
-            ("Aatrox".to_string(),   "Malzahar".to_string()),
-            ("Lucian".to_string(),   "Samira".to_string())
+            ("Malzahar".to_string(), "Aatrox".to_string()),
+            ("TahmKench".to_string(), "Brand".to_string()),
+            ("Brand".to_string(), "TahmKench".to_string()),
+            ("Viego".to_string(), "Vi".to_string()),
+            ("Zed".to_string(), "TwistedFate".to_string()),
+            ("Vi".to_string(), "Viego".to_string()),
+            ("TwistedFate".to_string(), "Zed".to_string()),
+            ("Samira".to_string(), "Lucian".to_string()),
+            ("Aatrox".to_string(), "Malzahar".to_string()),
+            ("Lucian".to_string(), "Samira".to_string()),
         ]);
         let champ_lane_map = std::collections::HashMap::from([
-            ("Aatrox".to_string(),  "TOP"),
-            ("TwistedFate".to_string(),  "MIDDLE"),
-            ("Samira".to_string(),  "BOTTOM"),
-            ("Viego".to_string(),  "JUNGLE"),
-            ("Zed".to_string(),  "MIDDLE"),
-            ("Lucian".to_string(),  "BOTTOM"),
-            ("Brand".to_string(),  "SUPPORT"),
-            ("Malzahar".to_string(),  "TOP"),
-            ("TahmKench".to_string(),  "SUPPORT"),
-            ("Vi".to_string(),  "JUNGLE")
+            ("Aatrox".to_string(), "TOP"),
+            ("TwistedFate".to_string(), "MIDDLE"),
+            ("Samira".to_string(), "BOTTOM"),
+            ("Viego".to_string(), "JUNGLE"),
+            ("Zed".to_string(), "MIDDLE"),
+            ("Lucian".to_string(), "BOTTOM"),
+            ("Brand".to_string(), "SUPPORT"),
+            ("Malzahar".to_string(), "TOP"),
+            ("TahmKench".to_string(), "SUPPORT"),
+            ("Vi".to_string(), "JUNGLE"),
         ]);
         // Champ vs Opponent Champ Mapping check frame 0
         for mapping in &frames[0].mappings {
-            assert_eq!(champ_opponent_truth_map.get(&mapping.champion_name).unwrap(), &mapping.opposing_champion_name);
+            assert_eq!(
+                champ_opponent_truth_map
+                    .get(&mapping.champion_name)
+                    .unwrap(),
+                &mapping.opposing_champion_name
+            );
         }
 
         // Lane Mapping check frame 0
         for mapping in &frames[0].mappings {
-            assert_eq!(champ_lane_map.get(&mapping.champion_name).unwrap(), &mapping.position);
+            assert_eq!(
+                champ_lane_map.get(&mapping.champion_name).unwrap(),
+                &mapping.position
+            );
         }
-
-
-
     }
 }
