@@ -374,7 +374,7 @@ mod tests {
             ("TahmKench".to_string(), "SUPPORT"),
             ("Vi".to_string(), "JUNGLE"),
         ]);
-        
+
         let champ_gold_map_last_frame = std::collections::HashMap::from([
             ("TwistedFate".to_string(), 15176),
             ("Lucian".to_string(), 16577),
@@ -385,9 +385,8 @@ mod tests {
             ("Vi".to_string(), 16166),
             ("Malzahar".to_string(), 16355),
             ("Viego".to_string(), 17987),
-            ("Zed".to_string(), 19895)
+            ("Zed".to_string(), 19895),
         ]);
-
 
         // Act.
         let response: crate::types::MatchTimeline =
@@ -397,9 +396,14 @@ mod tests {
         let frames = response.frames;
         assert!(frames.len() == 42);
 
-    
         for mapping in &frames[41].mappings {
-            assert_eq!(mapping.gold.parse::<i32>().unwrap(), champ_gold_map_last_frame.get(&mapping.champion_name).unwrap().clone());
+            assert_eq!(
+                mapping.gold.parse::<i32>().unwrap(),
+                champ_gold_map_last_frame
+                    .get(&mapping.champion_name)
+                    .unwrap()
+                    .clone()
+            );
         }
 
         // Champ vs Opponent Champ Mapping check frame 0
