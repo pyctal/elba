@@ -70,8 +70,7 @@ pub async fn parse_match_timeline(
                     }
                 })
                 .collect();
-            
-            
+
             MatchTimelineFrame {
                 mappings: champion_mappings,
                 frame_time: TimeDelta::seconds(frame.timestamp as i64),
