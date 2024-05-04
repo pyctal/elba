@@ -66,7 +66,7 @@ pub async fn parse_match_timeline(
                         champion_name: current_player.champion_name.clone(),
                         opposing_champion_name: opposing_player.champion_name.clone(),
                         position: calculate_position(current_player.individual_position.as_str()),
-                        gold: player.current_gold.to_string(),
+                        gold: player.total_gold.to_string(),
                     }
                 })
                 .collect();
@@ -327,6 +327,93 @@ mod tests {
 
         // Lane Mapping check frame 0
         for mapping in &frames[0].mappings {
+            assert_eq!(
+                champ_lane_map.get(&mapping.champion_name).unwrap(),
+                &mapping.position
+            );
+        }
+    }
+    #[tokio::test]
+    async fn test_match_timeline_last_frame_data() {
+        // Arrange.
+        let test_match_1: Match = serde_json::from_str(
+            fs::read_to_string("src/match_processing/test_data/test_match_1.txt")
+                .unwrap()
+                .as_str(),
+        )
+        .unwrap();
+
+        let test_match_timeline_1: MatchTimeline = serde_json::from_str(
+            fs::read_to_string("src/match_processing/test_data/test_match_timeline_1.txt")
+                .unwrap()
+                .as_str(),
+        )
+        .unwrap();
+
+        let champ_opponent_truth_map = std::collections::HashMap::from([
+            ("Malzahar".to_string(), "Aatrox".to_string()),
+            ("TahmKench".to_string(), "Brand".to_string()),
+            ("Brand".to_string(), "TahmKench".to_string()),
+            ("Viego".to_string(), "Vi".to_string()),
+            ("Zed".to_string(), "TwistedFate".to_string()),
+            ("Vi".to_string(), "Viego".to_string()),
+            ("TwistedFate".to_string(), "Zed".to_string()),
+            ("Samira".to_string(), "Lucian".to_string()),
+            ("Aatrox".to_string(), "Malzahar".to_string()),
+            ("Lucian".to_string(), "Samira".to_string()),
+        ]);
+        let champ_lane_map = std::collections::HashMap::from([
+            ("Aatrox".to_string(), "TOP"),
+            ("TwistedFate".to_string(), "MIDDLE"),
+            ("Samira".to_string(), "BOTTOM"),
+            ("Viego".to_string(), "JUNGLE"),
+            ("Zed".to_string(), "MIDDLE"),
+            ("Lucian".to_string(), "BOTTOM"),
+            ("Brand".to_string(), "SUPPORT"),
+            ("Malzahar".to_string(), "TOP"),
+            ("TahmKench".to_string(), "SUPPORT"),
+            ("Vi".to_string(), "JUNGLE"),
+        ]);
+        
+        let champ_gold_map_last_frame = std::collections::HashMap::from([
+            ("TwistedFate".to_string(), 15176),
+            ("Lucian".to_string(), 16577),
+            ("Brand".to_string(), 18185),
+            ("Samira".to_string(), 23806),
+            ("TahmKench".to_string(), 12420),
+            ("Aatrox".to_string(), 16468),
+            ("Vi".to_string(), 16166),
+            ("Malzahar".to_string(), 16355),
+            ("Viego".to_string(), 17987),
+            ("Zed".to_string(), 19895)
+        ]);
+
+
+        // Act.
+        let response: crate::types::MatchTimeline =
+            parse_match_timeline(test_match_timeline_1, test_match_1).await;
+
+        // Assert.
+        let frames = response.frames;
+        assert!(frames.len() == 42);
+
+    
+        for mapping in &frames[41].mappings {
+            assert_eq!(mapping.gold.parse::<i32>().unwrap(), champ_gold_map_last_frame.get(&mapping.champion_name).unwrap().clone());
+        }
+
+        // Champ vs Opponent Champ Mapping check frame 0
+        for mapping in &frames[41].mappings {
+            assert_eq!(
+                champ_opponent_truth_map
+                    .get(&mapping.champion_name)
+                    .unwrap(),
+                &mapping.opposing_champion_name
+            );
+        }
+
+        // Lane Mapping check frame 0
+        for mapping in &frames[41].mappings {
             assert_eq!(
                 champ_lane_map.get(&mapping.champion_name).unwrap(),
                 &mapping.position
