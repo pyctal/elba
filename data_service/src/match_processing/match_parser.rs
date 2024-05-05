@@ -1,4 +1,4 @@
-use crate::types::{ChampionFrame, MatchTimelineFrame, PuuidToChampionMapping};
+use crate::types::{ChampionFrame, MatchTimelineFrame, ParticipantIdToChampionMapping};
 use chrono::{DateTime, TimeDelta};
 use riven::models::match_v5::{
     Match, MatchTimeline, MatchTimelineInfoFrameParticipantFrame, Participant,
@@ -89,12 +89,15 @@ pub async fn parse_match_timeline(
     }
 }
 
-pub async fn get_puuid_to_champion_mapping(match_data: Match) -> Vec<PuuidToChampionMapping> {
+pub async fn get_puuid_to_champion_mapping(
+    match_data: Match,
+) -> Vec<ParticipantIdToChampionMapping> {
     match_data
         .info
         .participants
         .iter()
-        .map(|participant| PuuidToChampionMapping {
+        .map(|participant| ParticipantIdToChampionMapping {
+            participant_id: participant.participant_id.to_string(),
             puuid: participant.puuid.clone(),
             champion_name: participant.champion_name.clone(),
             position: calculate_position(participant.individual_position.as_str()),
@@ -139,7 +142,7 @@ mod tests {
     use riven::models::match_v5::{Match, MatchTimeline};
 
     use crate::{
-        match_processing::match_parser::parse_match_timeline, types::PuuidToChampionMapping,
+        match_processing::match_parser::parse_match_timeline, types::ParticipantIdToChampionMapping,
     };
 
     use super::get_puuid_to_champion_mapping;
@@ -170,10 +173,11 @@ mod tests {
                 .as_str(),
         )
         .unwrap();
-        let expected_mapping = PuuidToChampionMapping {
+        let expected_mapping = ParticipantIdToChampionMapping {
             puuid: String::from(
                 "qqtv94VdR_eGjsWvHWveZ4H9erzHsYh-xtJ8adL9CSvELZUakXN7JFZ2JUK7gmZoXB06dT0eiyFJ4Q",
             ),
+            participant_id: String::from("1"),
             champion_name: String::from("Aatrox"),
             position: String::from("TOP"),
         };
@@ -194,10 +198,11 @@ mod tests {
                 .as_str(),
         )
         .unwrap();
-        let expected_mapping = PuuidToChampionMapping {
+        let expected_mapping = ParticipantIdToChampionMapping {
             puuid: String::from(
                 "0h2hQQduHGMct9KBtIBqqPFez_Qva73HXPiSl5vaMGUVWcEJO_e2jMBRS6ZJhMCevJUQ8RWd-gy55Q",
             ),
+            participant_id: String::from("10"),
             champion_name: String::from("TahmKench"),
             position: String::from("SUPPORT"),
         };

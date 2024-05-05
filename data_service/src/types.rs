@@ -2,7 +2,7 @@ use chrono::{NaiveDateTime, TimeDelta};
 
 #[derive(PartialEq)]
 pub struct ParticipantIdToChampionMapping {
-    pub participant_id: string,
+    pub participant_id: String,
     pub champion_name: String,
     pub position: String,
     pub puuid: String,
