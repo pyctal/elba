@@ -6,13 +6,13 @@ use riven::models::match_v5::{
 use std::collections::HashMap;
 
 pub async fn parse_match_timeline(
-    _match_timeline: MatchTimeline,
-    _match: Match,
+    match_timeline: MatchTimeline,
+    match_data: Match,
 ) -> crate::types::MatchTimeline {
-    let match_frames = _match_timeline.info.frames;
+    let match_frames = match_timeline.info.frames;
 
     // Map of Participant ID to Participant object ( Found in Match Object but missing in MatchTimeline Object)
-    let participant_id_object_map: HashMap<i32, Participant> = _match
+    let participant_id_object_map: HashMap<i32, Participant> = match_data
         .info
         .participants
         .iter()
@@ -20,14 +20,14 @@ pub async fn parse_match_timeline(
         .collect();
 
     // Participant ID to Opponent Participant ID Map
-    let participant_id_opponent_id_map: HashMap<i32, i32> = _match
+    let participant_id_opponent_id_map: HashMap<i32, i32> = match_data
         .info
         .participants
         .iter()
         .map(|p| {
             (
                 p.participant_id,
-                get_opponent_player_id(p.participant_id, _match.clone()),
+                get_opponent_player_id(p.participant_id, match_data.clone()),
             )
         })
         .collect();
@@ -80,7 +80,7 @@ pub async fn parse_match_timeline(
 
     crate::types::MatchTimeline {
         frames: mapped_frames,
-        match_id: _match_timeline.metadata.match_id.clone(),
+        match_id: match_timeline.metadata.match_id.clone(),
         start_time: DateTime::from_timestamp_millis(
             match_frames[0].events[0].real_timestamp.unwrap(),
         )
@@ -395,7 +395,6 @@ mod tests {
         // Assert.
         let frames = response.frames;
         assert!(frames.len() == 42);
-
         for mapping in &frames[41].mappings {
             assert_eq!(
                 mapping.gold.parse::<i32>().unwrap(),
@@ -406,7 +405,7 @@ mod tests {
             );
         }
 
-        // Champ vs Opponent Champ Mapping check frame 0
+        // Champ vs Opponent Champ Mapping check frame 41 ( Last Frame)
         for mapping in &frames[41].mappings {
             assert_eq!(
                 champ_opponent_truth_map
@@ -416,7 +415,7 @@ mod tests {
             );
         }
 
-        // Lane Mapping check frame 0
+        // Lane Mapping check frame 41 ( Last Frame)
         for mapping in &frames[41].mappings {
             assert_eq!(
                 champ_lane_map.get(&mapping.champion_name).unwrap(),
