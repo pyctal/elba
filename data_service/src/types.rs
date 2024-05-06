@@ -5,7 +5,6 @@ pub struct ParticipantIdToChampionMapping {
     pub participant_id: String,
     pub champion_name: String,
     pub position: String,
-    pub puuid: String,
 }
 
 #[derive(PartialEq)]

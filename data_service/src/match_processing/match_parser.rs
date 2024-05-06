@@ -89,7 +89,7 @@ pub async fn parse_match_timeline(
     }
 }
 
-pub async fn get_puuid_to_champion_mapping(
+pub async fn get_participant_id_to_champion_mapping(
     match_data: Match,
 ) -> Vec<ParticipantIdToChampionMapping> {
     match_data
@@ -98,7 +98,6 @@ pub async fn get_puuid_to_champion_mapping(
         .iter()
         .map(|participant| ParticipantIdToChampionMapping {
             participant_id: participant.participant_id.to_string(),
-            puuid: participant.puuid.clone(),
             champion_name: participant.champion_name.clone(),
             position: calculate_position(participant.individual_position.as_str()),
         })
@@ -145,7 +144,7 @@ mod tests {
         match_processing::match_parser::parse_match_timeline, types::ParticipantIdToChampionMapping,
     };
 
-    use super::get_puuid_to_champion_mapping;
+    use super::get_participant_id_to_champion_mapping;
 
     #[tokio::test]
     async fn test_puuid_to_champion_mapping_get_10_mappings_when_parsed() {
@@ -158,7 +157,7 @@ mod tests {
         .unwrap();
 
         // Act.
-        let response = get_puuid_to_champion_mapping(test_match_1).await;
+        let response = get_participant_id_to_champion_mapping(test_match_1).await;
 
         // Assert.
         assert_eq!(response.len(), 10);
@@ -174,16 +173,13 @@ mod tests {
         )
         .unwrap();
         let expected_mapping = ParticipantIdToChampionMapping {
-            puuid: String::from(
-                "qqtv94VdR_eGjsWvHWveZ4H9erzHsYh-xtJ8adL9CSvELZUakXN7JFZ2JUK7gmZoXB06dT0eiyFJ4Q",
-            ),
             participant_id: String::from("1"),
             champion_name: String::from("Aatrox"),
             position: String::from("TOP"),
         };
 
         // Act.
-        let response = get_puuid_to_champion_mapping(test_match_1).await;
+        let response = get_participant_id_to_champion_mapping(test_match_1).await;
 
         // Assert.
         assert!(response.contains(&expected_mapping));
@@ -199,16 +195,13 @@ mod tests {
         )
         .unwrap();
         let expected_mapping = ParticipantIdToChampionMapping {
-            puuid: String::from(
-                "0h2hQQduHGMct9KBtIBqqPFez_Qva73HXPiSl5vaMGUVWcEJO_e2jMBRS6ZJhMCevJUQ8RWd-gy55Q",
-            ),
             participant_id: String::from("10"),
             champion_name: String::from("TahmKench"),
             position: String::from("SUPPORT"),
         };
 
         // Act.
-        let response = get_puuid_to_champion_mapping(test_match_1).await;
+        let response = get_participant_id_to_champion_mapping(test_match_1).await;
 
         // Assert.
         assert!(response.contains(&expected_mapping));
