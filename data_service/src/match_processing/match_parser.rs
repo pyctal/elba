@@ -1,36 +1,18 @@
-use crate::types::{ChampionFrame, MatchTimelineFrame, ParticipantIdToChampionMapping};
+use crate::types::{
+    ChampionFrame, MatchTimelineFrame, ParticipantIdToChampionMapping,
+    ParticipantIdToChampionMappingList,
+};
 use chrono::{DateTime, TimeDelta};
 use riven::models::match_v5::{
-    Match, MatchTimeline, MatchTimelineInfoFrameParticipantFrame, Participant,
+    Match, MatchTimeline, MatchTimelineInfoFrameParticipantFrame,
 };
 use std::collections::HashMap;
 
 pub async fn parse_match_timeline(
     match_timeline: MatchTimeline,
-    match_data: Match,
+    participant_id_to_champion_mapping: ParticipantIdToChampionMappingList,
 ) -> crate::types::MatchTimeline {
     let match_frames = match_timeline.info.frames;
-
-    // Map of Participant ID to Participant object ( Found in Match Object but missing in MatchTimeline Object)
-    let participant_id_object_map: HashMap<i32, Participant> = match_data
-        .info
-        .participants
-        .iter()
-        .map(|p| (p.participant_id, p.clone()))
-        .collect();
-
-    // Participant ID to Opponent Participant ID Map
-    let participant_id_opponent_id_map: HashMap<i32, i32> = match_data
-        .info
-        .participants
-        .iter()
-        .map(|p| {
-            (
-                p.participant_id,
-                get_opponent_player_id(p.participant_id, match_data.clone()),
-            )
-        })
-        .collect();
 
     // Using Combined context ( MatchTimeline, Match Objects ) create a new MatchTimeline Object
     let mapped_frames = match_frames
@@ -50,22 +32,18 @@ pub async fn parse_match_timeline(
                 .iter()
                 .map(|(player_id, player)| {
                     // Current Player and Opposing Player
-                    let current_player = participant_id_object_map
-                        .get(&player_id.parse::<i32>().unwrap())
+                    let current_player = participant_id_to_champion_mapping
+                        .find_champion(player_id)
                         .unwrap();
-                    let opposing_player = participant_id_object_map
-                        .get(
-                            &participant_id_opponent_id_map
-                                .get(&player_id.parse::<i32>().unwrap())
-                                .unwrap(),
-                        )
+                    let opposing_player = participant_id_to_champion_mapping
+                        .find_opponent(player_id)
                         .unwrap();
 
                     // Finally creating the Champion Frame required by the API
                     ChampionFrame {
                         champion_name: current_player.champion_name.clone(),
                         opposing_champion_name: opposing_player.champion_name.clone(),
-                        position: calculate_position(current_player.individual_position.as_str()),
+                        position: current_player.position.clone(),
                         gold: player.total_gold.to_string(),
                     }
                 })
@@ -91,41 +69,22 @@ pub async fn parse_match_timeline(
 
 pub async fn get_participant_id_to_champion_mapping(
     match_data: Match,
-) -> Vec<ParticipantIdToChampionMapping> {
-    match_data
-        .info
-        .participants
-        .iter()
-        .map(|participant| ParticipantIdToChampionMapping {
-            participant_id: participant.participant_id.to_string(),
-            champion_name: participant.champion_name.clone(),
-            position: calculate_position(participant.individual_position.as_str()),
-        })
-        .collect()
-}
-
-fn get_opponent_player_id(current_player_id: i32, match_data: Match) -> i32 {
-    let current_player_position = calculate_position(
-        &match_data
+) -> ParticipantIdToChampionMappingList {
+    ParticipantIdToChampionMappingList {
+        mappings: match_data
             .info
             .participants
             .iter()
-            .find(|p| p.participant_id == current_player_id)
-            .unwrap()
-            .individual_position,
-    );
-
-    match_data
-        .info
-        .participants
-        .iter()
-        .find(|p| {
-            p.participant_id != current_player_id
-                && calculate_position(p.individual_position.as_str()) == current_player_position
-        })
-        .unwrap()
-        .participant_id
+            .map(|participant| ParticipantIdToChampionMapping {
+                participant_id: participant.participant_id.to_string(),
+                champion_name: participant.champion_name.clone(),
+                position: calculate_position(participant.individual_position.as_str()),
+            })
+            .collect(),
+    }
 }
+
+
 
 fn calculate_position(individual_position: &str) -> String {
     match individual_position {
@@ -160,7 +119,7 @@ mod tests {
         let response = get_participant_id_to_champion_mapping(test_match_1).await;
 
         // Assert.
-        assert_eq!(response.len(), 10);
+        assert_eq!(response.mappings.len(), 10);
     }
 
     #[tokio::test]
@@ -182,7 +141,7 @@ mod tests {
         let response = get_participant_id_to_champion_mapping(test_match_1).await;
 
         // Assert.
-        assert!(response.contains(&expected_mapping));
+        assert!(response.mappings.contains(&expected_mapping));
     }
 
     #[tokio::test]
@@ -204,12 +163,14 @@ mod tests {
         let response = get_participant_id_to_champion_mapping(test_match_1).await;
 
         // Assert.
-        assert!(response.contains(&expected_mapping));
+        assert!(response.mappings.contains(&expected_mapping));
     }
 
     #[tokio::test]
     async fn test_match_timeline_can_parse_match_id() {
         // Arrange.
+
+        // Match Data
         let test_match_1: Match = serde_json::from_str(
             fs::read_to_string("src/match_processing/test_data/test_match_1.txt")
                 .unwrap()
@@ -217,6 +178,7 @@ mod tests {
         )
         .unwrap();
 
+        // Timeline Data
         let test_match_timeline_1: MatchTimeline = serde_json::from_str(
             fs::read_to_string("src/match_processing/test_data/test_match_timeline_1.txt")
                 .unwrap()
@@ -224,9 +186,13 @@ mod tests {
         )
         .unwrap();
 
+        // Get Participant to Champion Mapping
+        let participant_id_to_champion_mapping =
+            get_participant_id_to_champion_mapping(test_match_1).await;
+
         // Act.
         let response: crate::types::MatchTimeline =
-            parse_match_timeline(test_match_timeline_1, test_match_1).await;
+            parse_match_timeline(test_match_timeline_1, participant_id_to_champion_mapping).await;
 
         // Assert.
         assert_eq!(response.match_id, "EUW1_6920643858");
@@ -248,9 +214,14 @@ mod tests {
                 .as_str(),
         )
         .unwrap();
+
+        // Get Participant to Champion Mapping
+        let participant_id_to_champion_mapping =
+            get_participant_id_to_champion_mapping(test_match_1).await;
+
         // Act.
         let response: crate::types::MatchTimeline =
-            parse_match_timeline(test_match_timeline_1, test_match_1).await;
+            parse_match_timeline(test_match_timeline_1, participant_id_to_champion_mapping).await;
 
         // Assert.
         let frames = response.frames;
@@ -276,6 +247,10 @@ mod tests {
                 .as_str(),
         )
         .unwrap();
+
+        // Get Participant to Champion Mapping
+        let participant_id_to_champion_mapping =
+            get_participant_id_to_champion_mapping(test_match_1).await;
 
         let champ_opponent_truth_map = std::collections::HashMap::from([
             ("Malzahar".to_string(), "Aatrox".to_string()),
@@ -304,7 +279,7 @@ mod tests {
 
         // Act.
         let response: crate::types::MatchTimeline =
-            parse_match_timeline(test_match_timeline_1, test_match_1).await;
+            parse_match_timeline(test_match_timeline_1, participant_id_to_champion_mapping).await;
 
         // Assert.
         let frames = response.frames;
@@ -348,6 +323,10 @@ mod tests {
         )
         .unwrap();
 
+        // Get Participant to Champion Mapping
+        let participant_id_to_champion_mapping =
+            get_participant_id_to_champion_mapping(test_match_1).await;
+
         let champ_opponent_truth_map = std::collections::HashMap::from([
             ("Malzahar".to_string(), "Aatrox".to_string()),
             ("TahmKench".to_string(), "Brand".to_string()),
@@ -388,7 +367,7 @@ mod tests {
 
         // Act.
         let response: crate::types::MatchTimeline =
-            parse_match_timeline(test_match_timeline_1, test_match_1).await;
+            parse_match_timeline(test_match_timeline_1, participant_id_to_champion_mapping).await;
 
         // Assert.
         let frames = response.frames;

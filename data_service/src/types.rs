@@ -7,6 +7,24 @@ pub struct ParticipantIdToChampionMapping {
     pub position: String,
 }
 
+pub struct ParticipantIdToChampionMappingList {
+    pub mappings: Vec<ParticipantIdToChampionMapping>,
+}
+
+impl ParticipantIdToChampionMappingList {
+    pub fn find_champion(&self, participant_id: &str) -> Option<&ParticipantIdToChampionMapping> {
+        self.mappings
+            .iter()
+            .find(|mapping| mapping.participant_id == participant_id)
+    }
+    pub fn find_opponent(&self, participant_id: &str) -> Option<&ParticipantIdToChampionMapping> {
+        self.mappings.iter().find(|mapping| {
+            mapping.participant_id != participant_id
+                && self.find_champion(participant_id).unwrap().position == mapping.position
+        })
+    }
+}
+
 #[derive(PartialEq)]
 pub struct ChampionFrame {
     pub champion_name: String,
