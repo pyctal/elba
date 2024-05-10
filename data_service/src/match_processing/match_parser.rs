@@ -3,9 +3,7 @@ use crate::types::{
     ParticipantIdToChampionMappingList,
 };
 use chrono::{DateTime, TimeDelta};
-use riven::models::match_v5::{
-    Match, MatchTimeline, MatchTimelineInfoFrameParticipantFrame,
-};
+use riven::models::match_v5::{Match, MatchTimeline, MatchTimelineInfoFrameParticipantFrame};
 use std::collections::HashMap;
 
 pub async fn parse_match_timeline(
@@ -83,8 +81,6 @@ pub async fn get_participant_id_to_champion_mapping(
             .collect(),
     }
 }
-
-
 
 fn calculate_position(individual_position: &str) -> String {
     match individual_position {
