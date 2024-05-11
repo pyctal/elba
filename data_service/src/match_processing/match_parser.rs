@@ -1,6 +1,6 @@
 use crate::types::{
     ChampionFrame, MatchTimelineFrame, ParticipantIdToChampionMapping,
-    ParticipantIdToChampionMappingList,
+    ParticipantIdToChampionMappingList, ParticipantIdToChampionMappingListTrait,
 };
 use chrono::{DateTime, TimeDelta};
 use riven::models::match_v5::{Match, MatchTimeline, MatchTimelineInfoFrameParticipantFrame};
@@ -68,8 +68,8 @@ pub async fn parse_match_timeline(
 pub async fn get_participant_id_to_champion_mapping(
     match_data: Match,
 ) -> ParticipantIdToChampionMappingList {
-    ParticipantIdToChampionMappingList {
-        mappings: match_data
+    {
+        match_data
             .info
             .participants
             .iter()
@@ -78,7 +78,7 @@ pub async fn get_participant_id_to_champion_mapping(
                 champion_name: participant.champion_name.clone(),
                 position: calculate_position(participant.individual_position.as_str()),
             })
-            .collect(),
+            .collect()
     }
 }
 
@@ -115,7 +115,7 @@ mod tests {
         let response = get_participant_id_to_champion_mapping(test_match_1).await;
 
         // Assert.
-        assert_eq!(response.mappings.len(), 10);
+        assert_eq!(response.len(), 10);
     }
 
     #[tokio::test]
@@ -137,7 +137,7 @@ mod tests {
         let response = get_participant_id_to_champion_mapping(test_match_1).await;
 
         // Assert.
-        assert!(response.mappings.contains(&expected_mapping));
+        assert!(response.contains(&expected_mapping));
     }
 
     #[tokio::test]
@@ -159,7 +159,7 @@ mod tests {
         let response = get_participant_id_to_champion_mapping(test_match_1).await;
 
         // Assert.
-        assert!(response.mappings.contains(&expected_mapping));
+        assert!(response.contains(&expected_mapping));
     }
 
     #[tokio::test]
