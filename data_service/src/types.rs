@@ -27,7 +27,6 @@ impl ParticipantIdToChampionMappingListTrait for ParticipantIdToChampionMappingL
     }
 }
 
-
 #[derive(PartialEq)]
 pub struct ChampionFrame {
     pub champion_name: String,
