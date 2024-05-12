@@ -3,3 +3,4 @@ env.txt
 .env
 migrations/
 diesel.toml
+.vscode/
