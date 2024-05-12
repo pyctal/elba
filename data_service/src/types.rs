@@ -1,6 +1,6 @@
 use chrono::{NaiveDateTime, TimeDelta};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct ParticipantIdToChampionMapping {
     pub participant_id: String,
     pub champion_name: String,
@@ -12,8 +12,10 @@ pub type ParticipantIdToChampionMappingList = Vec<ParticipantIdToChampionMapping
 pub trait ParticipantIdToChampionMappingListTrait {
     fn find_champion(&self, participant_id: &str) -> Option<&ParticipantIdToChampionMapping>;
     fn find_opponent(&self, participant_id: &str) -> Option<&ParticipantIdToChampionMapping>;
+    fn copy(&self) -> ParticipantIdToChampionMappingList;
 }
 
+// TODO: Relocate this implementation to a more appropriate location
 impl ParticipantIdToChampionMappingListTrait for ParticipantIdToChampionMappingList {
     fn find_champion(&self, participant_id: &str) -> Option<&ParticipantIdToChampionMapping> {
         self.iter()
@@ -24,6 +26,9 @@ impl ParticipantIdToChampionMappingListTrait for ParticipantIdToChampionMappingL
             mapping.participant_id != participant_id
                 && self.find_champion(participant_id).unwrap().position == mapping.position
         })
+    }
+    fn copy(&self) -> ParticipantIdToChampionMappingList {
+        self.iter().map(|mapping| mapping.clone()).collect()
     }
 }
 

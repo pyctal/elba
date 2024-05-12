@@ -3,7 +3,9 @@ use crate::types::{
     ParticipantIdToChampionMappingList, ParticipantIdToChampionMappingListTrait,
 };
 use chrono::{DateTime, TimeDelta};
-use riven::models::match_v5::{Match, MatchTimeline, MatchTimelineInfoFrameParticipantFrame};
+use riven::models::match_v5::{
+    Match, MatchTimeline, MatchTimelineInfoFrame, MatchTimelineInfoFrameParticipantFrame,
+};
 use std::collections::HashMap;
 
 pub async fn parse_match_timeline(
@@ -12,45 +14,15 @@ pub async fn parse_match_timeline(
 ) -> crate::types::MatchTimeline {
     let match_frames = match_timeline.info.frames;
 
-    // Using Combined context ( MatchTimeline, Match Objects ) create a new MatchTimeline Object
+    // Combining champion mapping and timeline to get the required data for MatchTimelineFrame.
     let mapped_frames = match_frames
         .iter()
-        .map(|frame| {
-            // Weird that participant_frames is a struct of ( x1, x2,...x10) instead of a vector ( something iteratable) so we convert it to a hashmap ( only so that we can use .map())
-            let participants_frame_as_hashmap: HashMap<
-                String,
-                MatchTimelineInfoFrameParticipantFrame,
-            > = serde_json::from_value(
-                serde_json::to_value(frame.participant_frames.clone()).unwrap(),
-            )
-            .unwrap();
-
-            // Mapping Participant Frames to Champion Frames
-            let champion_mappings: Vec<ChampionFrame> = participants_frame_as_hashmap
-                .iter()
-                .map(|(player_id, player)| {
-                    // Current Player and Opposing Player
-                    let current_player = participant_id_to_champion_mapping
-                        .find_champion(player_id)
-                        .unwrap();
-                    let opposing_player = participant_id_to_champion_mapping
-                        .find_opponent(player_id)
-                        .unwrap();
-
-                    // Finally creating the Champion Frame required by the API
-                    ChampionFrame {
-                        champion_name: current_player.champion_name.clone(),
-                        opposing_champion_name: opposing_player.champion_name.clone(),
-                        position: current_player.position.clone(),
-                        gold: player.total_gold.to_string(),
-                    }
-                })
-                .collect();
-
-            MatchTimelineFrame {
-                mappings: champion_mappings,
-                frame_time: TimeDelta::seconds(frame.timestamp as i64),
-            }
+        .map(|frame| MatchTimelineFrame {
+            mappings: get_participant_frame_from_timeline_frame(
+                frame.clone(),
+                participant_id_to_champion_mapping.copy(),
+            ),
+            frame_time: TimeDelta::seconds(frame.timestamp as i64),
         })
         .collect();
 
@@ -60,7 +32,7 @@ pub async fn parse_match_timeline(
         start_time: DateTime::from_timestamp_millis(
             match_frames[0].events[0].real_timestamp.unwrap(),
         )
-        .expect("invalid timestamp")
+        .unwrap()
         .naive_utc(),
     }
 }
@@ -80,6 +52,39 @@ pub async fn get_participant_id_to_champion_mapping(
             })
             .collect()
     }
+}
+
+fn get_participant_frame_from_timeline_frame(
+    frame: MatchTimelineInfoFrame,
+    participant_id_to_champion_mapping: ParticipantIdToChampionMappingList,
+) -> Vec<ChampionFrame> {
+    // Weird that participant_frames is a struct of ( x1, x2,...x10) instead of a vector ( something iteratable) so we convert it to a hashmap ( only so that we can use .map())
+
+    let participants_frame_as_hashmap: HashMap<String, MatchTimelineInfoFrameParticipantFrame> =
+        serde_json::from_value(serde_json::to_value(frame.participant_frames.clone()).unwrap())
+            .unwrap();
+
+    // Mapping Participant Frames to Champion Frames
+    participants_frame_as_hashmap
+        .iter()
+        .map(|(player_id, player)| {
+            // Current Player and Opposing Player
+            let current_player = participant_id_to_champion_mapping
+                .find_champion(player_id)
+                .unwrap();
+            let opposing_player = participant_id_to_champion_mapping
+                .find_opponent(player_id)
+                .unwrap();
+
+            // Finally creating the Champion Frame required by the API
+            ChampionFrame {
+                champion_name: current_player.champion_name.clone(),
+                opposing_champion_name: opposing_player.champion_name.clone(),
+                position: current_player.position.clone(),
+                gold: player.total_gold.to_string(),
+            }
+        })
+        .collect()
 }
 
 fn calculate_position(individual_position: &str) -> String {
