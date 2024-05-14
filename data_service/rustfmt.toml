@@ -1,1 +1,1 @@
-format_generated_files = false
+rustfmt schema.rs --config format_generated_files=false
