@@ -8,6 +8,7 @@ pub mod match_processing;
 pub mod queues;
 pub mod schema;
 pub mod types;
+
 fn main() {
     let temporary_task = BeginCrawlRiotIdTask {
         riot_id: RiotId {
