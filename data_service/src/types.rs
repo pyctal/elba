@@ -55,3 +55,9 @@ pub struct MatchTimeline {
     pub match_id: String,
     pub start_time: NaiveDateTime,
 }
+
+#[derive(Hash, serde::Serialize, serde::Deserialize)]
+pub struct RiotId {
+    pub game_name: String,
+    pub tag: String,
+}

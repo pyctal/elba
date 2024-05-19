@@ -8,7 +8,7 @@ services:
       diesel setup &&
       diesel migration generate --diff-schema create_match_data &&
       diesel migration run;
-      cargo watch -x test"
+      cargo watch -x run"
     volumes:
       - ./data_service:/data_service
     env_file:
