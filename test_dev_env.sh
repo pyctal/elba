@@ -1,0 +1,1 @@
+docker compose up -f compose-test.yml

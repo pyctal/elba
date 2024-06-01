@@ -18,6 +18,10 @@ impl Queue {
         Self::enqueue(task);
     }
 
+    pub fn enqueue_process_match_id_task(task: ProcessMatchIdTask) {
+        Self::enqueue(task);
+    }
+
     fn enqueue<T: Hash + serde::Serialize>(task: T) {
         use crate::schema::queue_metadata;
 
@@ -43,11 +47,11 @@ fn calculate_hash<T: Hash>(t: &T) -> String {
 }
 
 #[derive(Hash, serde::Serialize, serde::Deserialize)]
-pub enum SupportedQueueTask {
-    BeginCrawlRiotIdTask(BeginCrawlRiotIdTask),
+pub struct BeginCrawlRiotIdTask {
+    pub riot_id: RiotId,
 }
 
 #[derive(Hash, serde::Serialize, serde::Deserialize)]
-pub struct BeginCrawlRiotIdTask {
-    pub riot_id: RiotId,
+pub struct ProcessMatchIdTask {
+    pub match_id: String,
 }

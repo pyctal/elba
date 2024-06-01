@@ -16,7 +16,14 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(
-    match_data,
-    queue_metadata,
-);
+diesel::table! {
+    champion_matchup_data (champion_name) {
+        champion_name -> Varchar,
+        opposing_champion_name -> Varchar,
+        gold_difference -> Integer,
+        game_minute -> Integer,
+        day_added -> Timestamp,
+    }
+}
+
+diesel::allow_tables_to_appear_in_same_query!(match_data, queue_metadata,);
