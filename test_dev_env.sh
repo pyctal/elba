@@ -1,1 +1,2 @@
-docker compose up -f compose-test.yml
+sudo rm -rf data_service/migrations
+docker compose -f compose-test.yml up

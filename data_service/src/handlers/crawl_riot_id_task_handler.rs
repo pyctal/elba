@@ -6,7 +6,7 @@ use crate::{
 pub async fn handle_crawl_riot_id_task(task: BeginCrawlRiotIdTask) {
     let riot_id = task.riot_id;
     let api_layer = RiotApiLayer::new().await;
-    let match_ids = api_layer
+    let _match_ids = api_layer
         .get_matches_by_puuid(&riot_id)
         .await
         .iter()

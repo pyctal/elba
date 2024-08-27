@@ -4,28 +4,29 @@ use std::{
 };
 
 use chrono::Utc;
-use diesel::RunQueryDsl;
+use diesel::{PgConnection, RunQueryDsl};
 
-use crate::{
-    database::{database_client::establish_connection, models::QueueMetadata},
-    types::RiotId,
-};
+use crate::{database::models::QueueMetadata, types::RiotId};
 
-pub struct Queue {}
+pub struct Queue {
+    pub pg_connection: PgConnection,
+}
 
 impl Queue {
-    pub fn enqueue_crawl_riot_id_task(task: BeginCrawlRiotIdTask) {
-        Self::enqueue(task);
+    pub fn enqueue_crawl_riot_id_task(&mut self, task: &BeginCrawlRiotIdTask) {
+        Self::enqueue(self, task);
     }
 
-    pub fn enqueue_process_match_id_task(task: ProcessMatchIdTask) {
-        Self::enqueue(task);
+    pub fn enqueue_process_match_id_task(&mut self, task: ProcessMatchIdTask) {
+        Self::enqueue(self, task);
     }
 
-    fn enqueue<T: Hash + serde::Serialize>(task: T) {
+    pub fn into_inner(self) -> PgConnection {
+        self.pg_connection
+    }
+
+    fn enqueue<T: Hash + serde::Serialize>(&mut self, task: T) {
         use crate::schema::queue_metadata;
-
-        let connection = &mut establish_connection();
 
         let new_task = QueueMetadata {
             hash: calculate_hash(&task),
@@ -35,7 +36,7 @@ impl Queue {
 
         diesel::insert_into(queue_metadata::table)
             .values(new_task)
-            .execute(connection)
+            .execute(&mut self.pg_connection)
             .unwrap();
     }
 }
@@ -46,7 +47,7 @@ fn calculate_hash<T: Hash>(t: &T) -> String {
     s.finish().to_string()
 }
 
-#[derive(Hash, serde::Serialize, serde::Deserialize)]
+#[derive(Hash, serde::Serialize, serde::Deserialize, Clone, PartialEq, Debug)]
 pub struct BeginCrawlRiotIdTask {
     pub riot_id: RiotId,
 }

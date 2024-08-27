@@ -57,14 +57,14 @@ pub struct MatchTimeline {
     pub start_time: NaiveDateTime,
 }
 
-#[derive(Hash, serde::Serialize, serde::Deserialize)]
+#[derive(Hash, serde::Serialize, serde::Deserialize, Clone, PartialEq, Debug)]
 pub struct RiotId {
     pub game_name: String,
     pub tag: String,
     pub region: CustomRegionalRoute,
 }
 
-#[derive(Hash, serde::Serialize, serde::Deserialize)]
+#[derive(Hash, serde::Serialize, serde::Deserialize, Clone, PartialEq, Debug)]
 pub struct CustomRegionalRoute {
     pub route: String,
 }
