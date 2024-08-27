@@ -21,7 +21,7 @@ jobs:
       run: cargo build --verbose
     - name: Test data_service
       working-directory: data_service
-      run: cargo test --verbose
+      run: cargo test --lib --bins --verbose
     - name: Check formatting
       working-directory: data_service
       run: cargo fmt --all -- --check --config format_generated_files=false
