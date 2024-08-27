@@ -24,8 +24,7 @@ jobs:
       run: cargo test --lib --bins --verbose
     - name: Data_service integration tests
       run: |
-        echo 
-          "POSTGRES_USER=asd
+        echo "POSTGRES_USER=asd
           POSTGRES_PASSWORD=asd
           DATABASE_URL=postgres://asd:asd@database/elba" > .env
         ./test_dev_env.sh
