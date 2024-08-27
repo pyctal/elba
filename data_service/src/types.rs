@@ -1,4 +1,5 @@
 use chrono::{NaiveDateTime, TimeDelta};
+use riven::consts::RegionalRoute;
 
 #[derive(PartialEq, Clone)]
 pub struct ParticipantIdToChampionMapping {
@@ -56,8 +57,46 @@ pub struct MatchTimeline {
     pub start_time: NaiveDateTime,
 }
 
-#[derive(Hash, serde::Serialize, serde::Deserialize)]
+#[derive(Hash, serde::Serialize, serde::Deserialize, Clone, PartialEq, Debug)]
 pub struct RiotId {
     pub game_name: String,
     pub tag: String,
+    pub region: CustomRegionalRoute,
+}
+
+#[derive(Hash, serde::Serialize, serde::Deserialize, Clone, PartialEq, Debug)]
+pub struct CustomRegionalRoute {
+    pub route: String,
+}
+
+pub fn to_custom_regional_route(route: &RegionalRoute) -> CustomRegionalRoute {
+    match route {
+        RegionalRoute::AMERICAS => CustomRegionalRoute {
+            route: String::from("AMERICAS"),
+        },
+        RegionalRoute::EUROPE => CustomRegionalRoute {
+            route: String::from("EUROPE"),
+        },
+        RegionalRoute::ASIA => CustomRegionalRoute {
+            route: String::from("ASIA"),
+        },
+        RegionalRoute::SEA => CustomRegionalRoute {
+            route: String::from("SEA"),
+        },
+        RegionalRoute::ESPORTS => CustomRegionalRoute {
+            route: String::from("ESPORTS"),
+        },
+        _ => panic!("Unsupported route"),
+    }
+}
+
+pub fn from_custom_regional_route(route: &CustomRegionalRoute) -> RegionalRoute {
+    match route.route.as_str() {
+        "AMERICAS" => RegionalRoute::AMERICAS,
+        "EUROPE" => RegionalRoute::EUROPE,
+        "ASIA" => RegionalRoute::ASIA,
+        "SEA" => RegionalRoute::SEA,
+        "ESPORTS" => RegionalRoute::ESPORTS,
+        _ => panic!("Unsupported route"),
+    }
 }

@@ -19,9 +19,15 @@ jobs:
     - name: Build data_service
       working-directory: data_service
       run: cargo build --verbose
-    - name: Test data_service
+    - name: Data_service unit tests
       working-directory: data_service
-      run: cargo test --verbose
+      run: cargo test --lib --bins --verbose
+    - name: Data_service integration tests
+      run: |
+        echo "POSTGRES_USER=asd
+          POSTGRES_PASSWORD=asd
+          DATABASE_URL=postgres://asd:asd@database/elba" > .env
+        ./github_workflow.sh
     - name: Check formatting
       working-directory: data_service
       run: cargo fmt --all -- --check --config format_generated_files=false
