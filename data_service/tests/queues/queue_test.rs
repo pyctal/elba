@@ -33,7 +33,7 @@ fn test_queue_insertion() {
         .select(QueueMetadata::as_select())
         .load(&mut returned_connection)
         .unwrap();
-    assert_eq!(inserted_data.len(), 1);
+    assert_eq!(inserted_data.len(), 2);
     let actual_riot_id_task: BeginCrawlRiotIdTask =
         serde_json::from_str::<BeginCrawlRiotIdTask>(&inserted_data[0].task_info.as_str()).unwrap();
     assert_eq!(example_riot_id_task, actual_riot_id_task);
