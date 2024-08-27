@@ -27,7 +27,7 @@ jobs:
         echo "POSTGRES_USER=asd
           POSTGRES_PASSWORD=asd
           DATABASE_URL=postgres://asd:asd@database/elba" > .env
-        ./test_dev_env.sh
+        ./github_workflow.sh
     - name: Check formatting
       working-directory: data_service
       run: cargo fmt --all -- --check --config format_generated_files=false
