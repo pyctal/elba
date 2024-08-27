@@ -19,7 +19,7 @@ jobs:
     - name: Build data_service
       working-directory: data_service
       run: cargo build --verbose
-    - name: Test data_service
+    - name: Data_service unit tests
       working-directory: data_service
       run: cargo test --lib --bins --verbose
     - name: Check formatting
