@@ -22,6 +22,12 @@ jobs:
     - name: Data_service unit tests
       working-directory: data_service
       run: cargo test --lib --bins --verbose
+    - name: Data_service integration tests
+      run: ./test_dev_env.sh
+      env:
+        POSTGRES_USER: asd
+        POSTGRES_PASSWORD: asd
+        DATABASE_URL: postgres://asd:asd@database/elba
     - name: Check formatting
       working-directory: data_service
       run: cargo fmt --all -- --check --config format_generated_files=false
